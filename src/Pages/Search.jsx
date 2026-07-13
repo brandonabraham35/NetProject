@@ -27,9 +27,7 @@ function Search() {
     console.log(searchQuery);
 
     axios
-      .get(
-        `/search/movie?api_key=${API_KEY}&language=en-US&query=${searchQuery}&page=1&include_adult=false`
-      )
+      .get(`/search?query=${searchQuery}`)
       .then((response) => {
         console.log(response.data.results);
         setMovies(response.data.results);

@@ -48,7 +48,7 @@ function Banner(props) {
     setShowModal(true);
 
     axios
-      .get(`/movie/${movieInfo.id}/videos?api_key=${API_KEY}&language=en-US`)
+      .get(`/movie/${movieInfo.id}/videos`)
       .then((responce) => {
         console.log(responce.data);
         if (responce.data.results.length !== 0) {
