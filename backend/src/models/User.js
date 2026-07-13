@@ -21,6 +21,17 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     defaultValue: 'user', // 'user' or 'admin'
   }
+}, {
+  indexes: [
+    {
+      unique: true,
+      fields: ['firebaseUid']
+    },
+    {
+      unique: true,
+      fields: ['email']
+    }
+  ]
 });
 
 module.exports = User;
