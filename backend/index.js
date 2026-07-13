@@ -9,6 +9,13 @@ const { sequelize } = require('./src/models');
 const authRoutes = require('./src/routes/auth');
 const userRoutes = require('./src/routes/user');
 const adminRoutes = require('./src/routes/admin');
+const errorHandler = require('./src/middleware/errorHandler');
+
+// Environment Validation
+if (!process.env.PORT && process.env.NODE_ENV !== 'test') {
+  console.warn('PORT environment variable not set, defaulting to 5000');
+}
+// Checking a mock requirement for db credentials if applicable, though using default in database.js
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,15 +35,16 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Routes restructuring to match requested REST principles
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes); // (Handles /api/user/list/:type)
-app.use('/api/admin', adminRoutes);
+// Health endpoint
+app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
+
+// API Versioning
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/user', userRoutes); // (Handles /api/v1/user/list/:type)
+app.use('/api/v1/admin', adminRoutes);
 
 // Centralized error handling
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
+app.use(errorHandler);
 
 // Sync Database and start server
 sequelize.sync().then(() => {

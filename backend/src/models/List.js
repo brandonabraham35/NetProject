@@ -23,6 +23,18 @@ const List = sequelize.define('List', {
     type: DataTypes.STRING, // To easily check if a movie is in the list
     allowNull: false,
   }
+}, {
+  indexes: [
+    {
+      unique: true,
+      fields: ['userId', 'type', 'movieId'],
+      name: 'unique_user_type_movie'
+    },
+    {
+      fields: ['userId', 'type'],
+      name: 'idx_user_type'
+    }
+  ]
 });
 
 module.exports = List;
