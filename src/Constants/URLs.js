@@ -1,6 +1,18 @@
 import { API_KEY } from "../Constants/Constance";
 export const TopRated = `popular/movies`;
 export const originals = `discover/tv?with_networks=213`;
+
+export const trending = `trending/all`;
+export const trendingSeries = `trending/series`;
+export const UpcomingMovies = `upcoming`;
+
+// Personalized Endpoints replacing generic genre rows
+export const becauseYouWatched = `../recommendations/because-you-watched`;
+export const topPicks = `../recommendations/top-picks`;
+export const trendingForUser = `../recommendations/trending-for-user`;
+export const continueWatching = `../recommendations/continue-watching`;
+
+// Keeping these for backwards compatibility or fallback if needed
 export const action = `discover/movie?with_genres=28`;
 export const comedy = `discover/movie?with_genres=35`;
 export const horror = `discover/movie?with_genres=27`;
@@ -8,6 +20,3 @@ export const Adventure = `discover/movie?with_genres=12`;
 export const SciFi = `discover/movie?with_genres=878`;
 export const Animated = `discover/movie?with_genres=16`;
 export const War = `discover/movie?with_genres=10752`;
-export const trending = `trending/all`;
-export const trendingSeries = `trending/series`;
-export const UpcomingMovies = `upcoming`;

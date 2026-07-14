@@ -39,7 +39,23 @@ class SyncManager {
       }
     });
 
-    // We can add Recommendation or Analytics aggregation jobs here as required.
+    // Recommendation Cache Refresh and User Preferences Update
+    // Runs daily at 2:00 AM
+    cron.schedule('0 2 * * *', async () => {
+      logger.info('Background Sync: Updating User Preferences');
+      try {
+        const { User } = require('../../models');
+        const userPreferenceService = require('../recommendations/services/UserPreferenceService');
+
+        // In a real system, you might paginate or queue this heavily
+        const users = await User.findAll({ attributes: ['id'] });
+        for (const user of users) {
+          await userPreferenceService.updatePreferencesFromAnalytics(user.id);
+        }
+      } catch (err) {
+        logger.error(`Background Sync failed for User Preferences: ${err.message}`);
+      }
+    });
   }
 }
 

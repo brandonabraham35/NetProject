@@ -11,6 +11,7 @@ const authRoutes = require('./src/routes/auth');
 const userRoutes = require('./src/routes/user');
 const adminRoutes = require('./src/routes/admin');
 const contentRoutes = require('./src/modules/content/routes/contentRoutes');
+const recommendationRoutes = require('./src/modules/recommendations/routes/recommendationRoutes');
 const socialRoutes = require('./src/routes/social');
 const errorHandler = require('./src/middleware/errorHandler');
 const syncManager = require('./src/modules/sync/SyncManager');
@@ -85,6 +86,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/user', userRoutes); // (Handles /api/v1/user/list/:type)
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/content', contentRoutes);
+app.use('/api/v1/recommendations', recommendationRoutes);
 app.use('/api/v1/social', socialRoutes);
 
 // OpenAPI Documentation
