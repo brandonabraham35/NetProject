@@ -34,6 +34,7 @@ function RowPost(props) {
   const [moviePopupInfo, setMoviePopupInfo] = useState({});
   const [shouldPop, setshouldPop] = useState(true);
   const [urlId, setUrlId] = useState("");
+  const [internalStreamUrl, setInternalStreamUrl] = useState("");
 
   useEffect(() => {
     if (props.movieData != null) {
@@ -76,15 +77,26 @@ function RowPost(props) {
     if (shouldPop) {
       setMoviePopupInfo(movieInfo);
       setShowModal(true);
-      axios
-        .get(`/movie/${movieInfo.id}/videos`)
-        .then((responce) => {
-          console.log(responce.data);
-          if (responce.data.results.length !== 0) {
-            setUrlId(responce.data.results[0]);
-          } else {
-            console.log("Array Emptey");
+
+      // Try to get internal streaming token first
+      axios.get(`/media/${movieInfo.id}/token`)
+        .then((res) => {
+          if (res.data && res.data.streamUrl) {
+            setInternalStreamUrl(axios.defaults.baseURL.replace('/api/v1/content/', '') + res.data.streamUrl);
           }
+        })
+        .catch(() => {
+          // Fallback to youtube videos
+          axios
+            .get(`/movie/${movieInfo.id}/videos`)
+            .then((responce) => {
+              console.log(responce.data);
+              if (responce.data.results && responce.data.results.length !== 0) {
+                setUrlId(responce.data.results[0]);
+              } else {
+                console.log("Empty data array");
+              }
+            });
         });
     }
   };
@@ -335,7 +347,15 @@ function RowPost(props) {
                       </svg>
                     </button>
                     {/*Movie Trailer or Image*/}
-                    {urlId ? (
+                    {internalStreamUrl ? (
+                      <video
+                        src={internalStreamUrl}
+                        controls
+                        autoPlay
+                        className="YouTubeVid"
+                        style={{ width: "100%", height: "27rem", objectFit: "cover", backgroundColor: "black" }}
+                      />
+                    ) : urlId ? (
                       <YouTube
                         opts={opts}
                         videoId={urlId.key}
