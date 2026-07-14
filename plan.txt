@@ -1,46 +1,45 @@
-1. **Architecture Setup (Backend Modules)**:
-   - Create directories: `backend/src/modules/recommendations/{controllers,services,engines,strategies,repositories,routes,models,schedulers,cache,validators,utils}`.
+1. **Architecture Setup (Streaming Module)**:
+   - Create directories: `backend/src/modules/streaming/{controllers,services,routes,middleware,repositories,transcoders,storage,subtitles,thumbnails,uploads,jobs,validators,utils}`.
 
 2. **Database Enhancements**:
-   - Add new Sequelize models for `UserPreferences`, `RecommendationScores`, `RecommendationHistory`, `RecommendationFeedback`, `TrendingSnapshots`, `GenreStatistics`, `ViewingPatterns`, `RecommendationLogs`, `StrategyWeights`, `StrategyPerformance`, `RecommendationCache` in `backend/src/models/` and update associations.
+   - Create Sequelize models in `backend/src/models/`: `MediaFiles`, `MediaVersions`, `PlaybackSessions`, `Subtitles`, `AudioTracks`, `VideoQualities`, `MediaUploads`, `MediaProcessingJobs`, `MediaThumbnails`, `MediaAccessLogs`.
+   - Update `models/index.js` associations.
 
 3. **Verify Database Enhancements**:
-   - Run a node script to initialize the Sequelize models and authenticate, ensuring no schema sync errors occur and associations are valid.
+   - Run a node script to initialize the Sequelize models, ensuring no schema sync errors occur and associations are valid.
 
-4. **Engine & Strategy Manager Implementation**:
-   - Implement `RecommendationEngine.js` which handles the weighted score aggregator and duplicate merging.
-   - Implement `StrategyManager.js` which manages registering and executing strategies.
-   - Create the `BaseStrategy.js` interface.
+4. **Storage & Media Managers Implementation**:
+   - Create `backend/src/modules/streaming/storage/StorageProvider.js` interface.
+   - Implement `LocalStorageProvider.js` handling local file operations.
+   - Implement `UploadManager.js` using `multer` for secure uploads.
+   - Implement `MediaManager.js`, `ThumbnailManager.js`, `SubtitleManager.js`, `PlaybackManager.js`.
 
-5. **Strategy Implementations**:
-   - Implement the independent strategies (`GenreStrategy`, `HistoryStrategy`, `FavoriteStrategy`, `TrendingStrategy`, `RatingStrategy`, `PopularityStrategy`, `SimilarityStrategy`, `ContinueWatchingStrategy`, `SearchHistoryStrategy`, `RecentlyReleasedStrategy`, `CollaborativeFilteringStrategy`, `ContentSimilarityStrategy`, `ColdStartStrategy`, `SeasonalStrategy`, `TimeOfDayStrategy`). Every strategy returns Content, Strategy score, Confidence, Explanation, Metadata.
+5. **Streaming Service & Controllers Implementation**:
+   - Implement `StreamingService.js` to process progressive streaming with HTTP Range requests.
+   - Implement `streamingController.js` mapping to the new `/api/v1/stream/...` and `/api/v1/media/...` endpoints.
 
-6. **Recommendation Service Implementation**:
-   - Implement `RecommendationService.js` to call the `RecommendationEngine` and format outputs into dynamic homepage rows (Top Picks For You, Because You Watched..., etc.).
+6. **Routing & Security Integration**:
+   - Create `streamingRoutes.js` and mount it to `backend/index.js`.
+   - Implement token-based authorization middleware for secure streaming.
 
-7. **Profile Intelligence Service**:
-   - Create a service to automatically determine and update `UserPreferences` (favorite genres, actors, etc.) after interactions.
+7. **Frontend Player Integration**:
+   - Update `src/componets/RowPost/RowPost.jsx` and `src/Pages/Play.jsx` to conditionally render an HTML5 `<video>` element alongside the existing `YouTube` component. If internal media data is returned from the API, it plays the internal secure stream; otherwise, it falls back to the existing YouTube logic (thus preserving all existing functionality and UI).
 
-8. **Controllers and Routes Implementation**:
-   - Create `RecommendationController.js` to handle endpoints mapping to `RecommendationService`.
-   - Create `recommendationRoutes.js` mapping to `/api/v1/recommendations`, `/api/v1/recommendations/home`, `/api/v1/recommendations/because-you-watched/:id`, `/api/v1/recommendations/trending`, `/api/v1/recommendations/new`, `/api/v1/recommendations/similar/:id`, `/api/v1/recommendations/profile`, `POST /api/v1/recommendations/feedback`, `GET /api/v1/admin/recommendations/analytics`.
-   - Connect `recommendationRoutes` to the main express app in `backend/index.js`.
+8. **Admin Dashboard Enhancements**:
+   - Update `adminController.js` to include Media Library stats, Upload/Processing Queue counts, Storage Usage, and Bandwidth Statistics from the new database models.
 
-9. **Verify Backend Functionality**:
-   - Start the backend and test the new `/api/v1/recommendations` routes via `curl` to ensure they respond with 200 HTTP codes.
+9. **Background Jobs (Workers)**:
+   - Expand `SyncManager.js` to process simulated Transcoding and Thumbnail background jobs from `MediaProcessingJobs`.
 
-10. **Admin Dashboard Enhancements**:
-    - Update `adminController.js` to return Recommendation Analytics, Strategy Performance, CTR, Acceptance Rate, Most Recommended Content, Best Performing Genres, Recommendation Health, User Preference Insights, Trending Analytics, Strategy Weight Management.
+10. **Verify Backend Functionality**:
+   - Start the backend and test the new `/api/v1/stream` routes via `curl` to ensure they respond correctly.
 
-11. **Background Jobs (Schedulers)**:
-    - Update `SyncManager.js` to add node-cron jobs for refreshing recommendation cache, updating profiles, computing CF, trending stats.
+11. **Testing**:
+   - Create unit tests in `backend/tests/StorageProvider.test.js` and `backend/tests/PlaybackManager.test.js`.
+   - Run tests using `npm test`.
 
-12. **Testing**:
-    - Create unit tests in `backend/tests/RecommendationEngine.test.js` and `backend/tests/StrategyManager.test.js`.
-    - Run tests using `npm test`.
+12. **Pre-commit Steps**:
+   - Complete pre-commit steps to ensure proper testing, verification, review, and reflection are done.
 
-13. **Pre-commit Steps**:
-    - Complete pre-commit steps to ensure proper testing, verification, review, and reflection are done.
-
-14. **Submit**:
-    - Commit and submit changes.
+13. **Submit**:
+   - Commit and submit changes.

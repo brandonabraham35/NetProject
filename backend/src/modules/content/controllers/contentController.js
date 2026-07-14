@@ -1,5 +1,5 @@
 const contentService = require('../services/ContentService');
-const recommendationService = require('../services/RecommendationService');
+// We no longer require the content/services/RecommendationService as it was moved.
 const logger = require('../../../config/logger');
 const { ContentAnalytics, SearchHistory } = require('../../../models');
 const { Op } = require('sequelize');

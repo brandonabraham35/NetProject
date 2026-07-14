@@ -46,32 +46,42 @@ function Play() {
       setIsFromWatchedMovies(true);
     }
 
-    axios
-      .get(`/movie/${id}/videos`)
-      .then((responce) => {
-        console.log(responce.data, "This is the data");
-        if (responce.data.results.length !== 0) {
-          setUrlId(responce.data.results[0]);
-          setMoreTrailerVideos(responce.data.results);
-        } else {
-          console.log("Array Emptey");
+    // Try internal stream first
+    axios.get(`/media/${id}/token`)
+      .then((res) => {
+        if (res.data && res.data.streamUrl) {
+          setInternalStreamUrl(axios.defaults.baseURL.replace('/api/v1/content/', '') + res.data.streamUrl);
         }
-      });
+      })
+      .catch((err) => {
+        // Fallback to youtube videos
+        axios
+          .get(`/movie/${id}/videos`)
+          .then((responce) => {
+            console.log(responce.data, "This is the data");
+            if (responce.data.results && responce.data.results.length !== 0) {
+              setUrlId(responce.data.results[0]);
+              setMoreTrailerVideos(responce.data.results);
+            } else {
+              console.log("Array Emptey");
 
-    if (urlId === "") {
-      axios
-          .get(`/series/${id}/videos`)
-        .then((responce) => {
-          if (responce.data.results.length !== 0) {
-            console.log(responce.data.results[0], "This is using find ");
-            setUrlId(responce.data.results[0]);
-            setMoreTrailerVideos(responce.data.results);
-            console.log(moreTrailerVideos);
-          } else {
-            console.log("Array Emptey");
-          }
-        });
-    }
+              if (urlId === "") {
+                axios
+                    .get(`/series/${id}/videos`)
+                  .then((responce) => {
+                    if (responce.data.results && responce.data.results.length !== 0) {
+                      console.log(responce.data.results[0], "This is using find ");
+                      setUrlId(responce.data.results[0]);
+                      setMoreTrailerVideos(responce.data.results);
+                      console.log(moreTrailerVideos);
+                    } else {
+                      console.log("Array Emptey");
+                    }
+                  });
+              }
+            }
+          });
+      });
     axios
       .get(`/movie/${id}`)
       .then((responce) => {
@@ -98,7 +108,14 @@ function Play() {
       {PopupMessage}
 
       <div className="mt-12 h-[31vh] sm:h-[42vh] md:h-[45vh] lg:h-[55vh] lg:mt-0 xl:h-[98vh]">
-        {urlId ? (
+        {internalStreamUrl ? (
+          <video
+            src={internalStreamUrl}
+            controls
+            autoPlay
+            style={{ width: "100%", height: "inherit", backgroundColor: "black" }}
+          />
+        ) : urlId ? (
           <iframe
             width="100%"
             style={{ height: "inherit" }}

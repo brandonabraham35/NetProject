@@ -56,6 +56,29 @@ class SyncManager {
         logger.error(`Background Sync failed for User Preferences: ${err.message}`);
       }
     });
+
+    // Media Processing Jobs worker
+    // Runs every 5 minutes
+    cron.schedule('*/5 * * * *', async () => {
+      logger.info('Background Worker: Checking MediaProcessingJobs');
+      try {
+        const { MediaProcessingJobs } = require('../../models');
+        const pendingJobs = await MediaProcessingJobs.findAll({
+          where: { status: 'pending' },
+          limit: 10
+        });
+
+        for (const job of pendingJobs) {
+          logger.info(`Processing job ${job.id} of type ${job.type}`);
+          // Mock processing step
+          // In reality, we would hook into FFmpeg wrappers or Thumbnail extractors here.
+          job.status = 'completed';
+          await job.save();
+        }
+      } catch (err) {
+        logger.error(`Background Worker failed for Media Processing: ${err.message}`);
+      }
+    });
   }
 }
 

@@ -77,7 +77,7 @@ const getDashboardOverview = async (req, res) => {
     // Further expanded Admin Stats for Phase 4
     const { SearchHistory } = require('../models');
 
-    const { StrategyPerformance, RecommendationScores, StrategyWeights } = require('../models');
+    const { MediaFiles, MediaProcessingJobs, MediaAccessLogs, StrategyPerformance, RecommendationScores, StrategyWeights } = require('../models');
 
     // Quick grouping for most searched queries
     const mostSearched = await SearchHistory.findAll({
@@ -111,6 +111,16 @@ const getDashboardOverview = async (req, res) => {
       cachedItems: cacheInfo.size,
       queueStatus: 'Idle/Scheduled', // Node-cron is active
       systemLogs: 'winston active',
+
+      // Phase 7: Media Streaming Stats
+      mediaLibraryStats: {
+        totalFiles: await MediaFiles.count(),
+        totalBytesTransferred: await MediaAccessLogs.sum('bytesTransferred') || 0,
+        processingJobs: {
+          pending: await MediaProcessingJobs.count({ where: { status: 'pending' } }),
+          failed: await MediaProcessingJobs.count({ where: { status: 'failed' } })
+        }
+      },
 
       recommendationAnalytics: {
         totalGenerated: await RecommendationScores.count(),
