@@ -11,4 +11,11 @@ const logger = winston.createLogger({
   ]
 });
 
+// Create a stream object for Morgan integration
+logger.stream = {
+  write: function(message) {
+    logger.info(message.trim());
+  },
+};
+
 module.exports = logger;

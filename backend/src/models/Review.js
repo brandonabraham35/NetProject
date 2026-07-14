@@ -24,6 +24,15 @@ const Review = sequelize.define('Review', {
     type: DataTypes.TEXT,
     allowNull: true,
   }
+}, {
+  indexes: [
+    {
+      fields: ['userId']
+    },
+    {
+      fields: ['contentId']
+    }
+  ]
 });
 
 module.exports = Review;

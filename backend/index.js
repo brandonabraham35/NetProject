@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
+const { v4: uuidv4 } = require('uuid');
 
 const { sequelize } = require('./src/models');
 const authRoutes = require('./src/routes/auth');
@@ -24,12 +25,38 @@ if (!process.env.PORT && process.env.NODE_ENV !== 'test') {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Request ID generation
+app.use((req, res, next) => {
+  req.id = uuidv4();
+  res.setHeader('X-Request-ID', req.id);
+  next();
+});
+
 // Security and performance middlewares
-app.use(helmet());
-app.use(cors());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+}));
+
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json());
-app.use(morgan('combined'));
+
+const logger = require('./src/config/logger');
+// Audit logging format injecting Request ID
+morgan.token('id', (req) => req.id);
+app.use(morgan(':id :remote-addr :method :url HTTP/:http-version :status :res[content-length] - :response-time ms', { stream: logger.stream }));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -41,6 +68,17 @@ app.use(limiter);
 // Routes restructuring to match requested REST principles
 // Health endpoint
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
+
+// Liveness and Readiness checks
+app.get('/health/live', (req, res) => res.status(200).json({ status: 'live' }));
+app.get('/health/ready', async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    res.status(200).json({ status: 'ready', database: 'connected' });
+  } catch (error) {
+    res.status(503).json({ status: 'not ready', database: 'disconnected' });
+  }
+});
 
 // API Versioning
 app.use('/api/v1/auth', authRoutes);
