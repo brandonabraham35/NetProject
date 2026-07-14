@@ -127,7 +127,13 @@ exports.search = async (req, res) => {
   try {
     const query = req.query.query || '';
     const page = parseInt(req.query.page, 10) || 1;
-    const data = await contentService.search(query, page);
+    const filters = {
+      year: req.query.year,
+      genres: req.query.genres,
+      rating: req.query.rating
+    };
+
+    const data = await contentService.search(query, page, filters);
     logAnalytics(req.user?.id, null, 'search_clicks');
 
     if (query && req.user?.id) {
@@ -160,6 +166,22 @@ exports.search = async (req, res) => {
   } catch (error) {
     logger.error(`Content Error: ${error.message}`);
     res.status(502).json({ error: 'Failed to search' });
+  }
+};
+
+exports.getSearchSuggestions = async (req, res) => {
+  try {
+    const query = req.query.query || '';
+    if (!query) return res.status(200).json({ results: [] });
+
+    // For suggestions, just do a fast search and return top 5 titles
+    const data = await contentService.search(query, 1);
+    const suggestions = data.results?.slice(0, 5).map(i => i.title || i.name) || [];
+
+    res.status(200).json({ suggestions });
+  } catch (error) {
+    logger.error(`Content Error: ${error.message}`);
+    res.status(502).json({ error: 'Failed to fetch suggestions' });
   }
 };
 

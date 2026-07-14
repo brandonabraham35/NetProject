@@ -12,7 +12,7 @@ class ContentProvider {
   async getSeries(id) { throw new Error('Not implemented'); }
   async getSeason(id, season) { throw new Error('Not implemented'); }
   async getEpisode(id, season, episode) { throw new Error('Not implemented'); }
-  async search(query, page = 1) { throw new Error('Not implemented'); }
+  async search(query, page = 1, filters = {}) { throw new Error('Not implemented'); }
   async getGenres() { throw new Error('Not implemented'); }
   async getRecommendations(id, page = 1) { throw new Error('Not implemented'); }
   async getVideos(type, id) { throw new Error('Not implemented'); }

@@ -20,6 +20,7 @@ router.get('/popular/movies', contentController.getPopularMovies);
 router.get('/popular/series', contentController.getPopularSeries);
 
 router.get('/search', optionalAuth, contentController.search);
+router.get('/search/suggestions', contentController.getSearchSuggestions);
 router.get('/movie/:id', optionalAuth, contentController.getMovie);
 router.get('/series/:id', optionalAuth, contentController.getSeries);
 router.get('/season/:id', (req, res) => {

@@ -2,7 +2,136 @@ const { List } = require('../models');
 
 const logger = require('../config/logger');
 
-const { SearchHistory } = require('../models');
+const { SearchHistory, ContinueWatching, Profile, Notification } = require('../models');
+
+const getNotifications = async (req, res) => {
+  try {
+    const firebaseUid = req.user.firebaseUid;
+    const { User } = require('../models');
+    const user = await User.findOne({ where: { firebaseUid } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const notifications = await Notification.findAll({
+      where: { userId: user.id },
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.status(200).json({ notifications });
+  } catch (error) {
+    logger.error(`Error fetching notifications: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const getProfiles = async (req, res) => {
+  try {
+    const firebaseUid = req.user.firebaseUid;
+    const { User } = require('../models');
+    const user = await User.findOne({ where: { firebaseUid } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const profiles = await Profile.findAll({ where: { userId: user.id } });
+
+    // Automatically create a default profile if none exist
+    if (profiles.length === 0) {
+      const defaultProfile = await Profile.create({
+        userId: user.id,
+        name: 'Default',
+        preferences: {}
+      });
+      return res.status(200).json({ profiles: [defaultProfile] });
+    }
+
+    res.status(200).json({ profiles });
+  } catch (error) {
+    logger.error(`Error fetching profiles: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const createProfile = async (req, res) => {
+  try {
+    const firebaseUid = req.user.firebaseUid;
+    const { User } = require('../models');
+    const user = await User.findOne({ where: { firebaseUid } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const { name, avatar, language, preferences } = req.body;
+
+    // Limit profiles per user
+    const profileCount = await Profile.count({ where: { userId: user.id } });
+    if (profileCount >= 5) {
+      return res.status(400).json({ error: 'Maximum of 5 profiles allowed' });
+    }
+
+    const profile = await Profile.create({
+      userId: user.id,
+      name: name || `Profile ${profileCount + 1}`,
+      avatar: avatar || '',
+      language: language || 'en-US',
+      preferences: preferences || {}
+    });
+
+    res.status(201).json({ profile });
+  } catch (error) {
+    logger.error(`Error creating profile: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const updateProgress = async (req, res) => {
+  try {
+    const firebaseUid = req.user.firebaseUid;
+    const { User } = require('../models');
+    const user = await User.findOne({ where: { firebaseUid } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const { movieId, progress } = req.body;
+    if (!movieId || progress === undefined) {
+      return res.status(400).json({ error: 'movieId and progress are required' });
+    }
+
+    const existing = await ContinueWatching.findOne({
+      where: { userId: user.id, movieId: String(movieId) }
+    });
+
+    if (existing) {
+      existing.progress = progress;
+      await existing.save();
+    } else {
+      await ContinueWatching.create({
+        userId: user.id,
+        movieId: String(movieId),
+        progress
+      });
+    }
+
+    res.status(200).json({ message: 'Progress updated successfully' });
+  } catch (error) {
+    logger.error(`Error updating progress: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const removeProgress = async (req, res) => {
+  try {
+    const firebaseUid = req.user.firebaseUid;
+    const { User } = require('../models');
+    const user = await User.findOne({ where: { firebaseUid } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const { movieId } = req.params;
+
+    await ContinueWatching.destroy({
+      where: { userId: user.id, movieId: String(movieId) }
+    });
+
+    res.status(200).json({ message: 'Progress removed successfully' });
+  } catch (error) {
+    logger.error(`Error removing progress: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 const getList = async (req, res) => {
   try {
@@ -141,6 +270,11 @@ const clearSearchHistory = async (req, res) => {
 };
 
 module.exports = {
+  getNotifications,
+  getProfiles,
+  createProfile,
+  updateProgress,
+  removeProgress,
   getList,
   addToList,
   removeFromList,

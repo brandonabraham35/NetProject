@@ -34,8 +34,11 @@ class Normalizer {
       seasonCount: item.number_of_seasons || null,
       episodeCount: item.number_of_episodes || null,
       status: item.status || 'Unknown',
-      images: null, // hydrated separately if needed
-      trailers: null // hydrated separately if needed
+      images: item.images || null,
+      trailers: item.videos || null,
+      cast: item.credits?.cast?.slice(0, 10) || null,
+      crew: item.credits?.crew?.filter(c => ['Director', 'Producer'].includes(c.job)) || null,
+      similar: item.similar ? this.normalizeList(item.similar.results, providerName) : null
     };
   }
 
@@ -71,7 +74,14 @@ class Normalizer {
       runtime: normalizedItem.runtime,
       number_of_seasons: normalizedItem.seasonCount,
       number_of_episodes: normalizedItem.episodeCount,
-      status: normalizedItem.status
+      status: normalizedItem.status,
+      videos: normalizedItem.trailers,
+      images: normalizedItem.images,
+      credits: {
+        cast: normalizedItem.cast,
+        crew: normalizedItem.crew
+      },
+      similar: normalizedItem.similar ? { results: this.adaptListToUI(normalizedItem.similar) } : null
     };
   }
 
