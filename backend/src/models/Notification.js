@@ -23,6 +23,15 @@ const Notification = sequelize.define('Notification', {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   }
+}, {
+  indexes: [
+    {
+      fields: ['userId']
+    },
+    {
+      fields: ['isRead']
+    }
+  ]
 });
 
 module.exports = Notification;

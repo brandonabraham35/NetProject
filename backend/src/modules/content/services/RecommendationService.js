@@ -10,8 +10,9 @@ class RecommendationService {
     const popularMovies = await contentService.getPopularMovies();
     const popularSeries = await contentService.getPopularSeries();
 
-    let recommendedMovies = trending.results?.filter(i => i.mediaType === 'movie').slice(0, 10) || [];
-    let recommendedSeries = trending.results?.filter(i => i.mediaType === 'tv').slice(0, 10) || [];
+    // Data returned by ContentService is already UI-adapted (so properties are media_type, not mediaType).
+    let recommendedMovies = trending.results?.filter(i => i.media_type === 'movie').slice(0, 10) || [];
+    let recommendedSeries = trending.results?.filter(i => i.media_type === 'tv').slice(0, 10) || [];
     let continueWatching = [];
     let recentlyViewed = [];
     let becauseYouWatched = [];
@@ -71,16 +72,16 @@ class RecommendationService {
       topPicks = popularMovies.results?.slice(0, 10) || [];
     }
 
-    // Ensure all internal lists are passed through adaptToUI to prevent frontend crashes
+    // Data from ContentService is already adapted to UI, so we just return it raw without re-adapting.
     return {
-      recommendedMovies: Normalizer.adaptListToUI(recommendedMovies),
-      recommendedSeries: Normalizer.adaptListToUI(recommendedSeries),
-      trendingForUser: Normalizer.adaptListToUI(trending.results?.slice(0, 10) || []),
-      continueWatching, // specific structure, leave raw
-      becauseYouWatched: Normalizer.adaptListToUI(becauseYouWatched),
-      recentlyViewed, // specific structure, leave raw
-      topPicksForYou: Normalizer.adaptListToUI(topPicks),
-      newReleases: Normalizer.adaptListToUI(popularSeries.results?.slice(0, 10) || [])
+      recommendedMovies,
+      recommendedSeries,
+      trendingForUser: trending.results?.slice(0, 10) || [],
+      continueWatching,
+      becauseYouWatched,
+      recentlyViewed,
+      topPicksForYou: topPicks,
+      newReleases: popularSeries.results?.slice(0, 10) || []
     };
   }
 }

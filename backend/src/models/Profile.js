@@ -27,6 +27,12 @@ const Profile = sequelize.define('Profile', {
     type: DataTypes.JSONB,
     defaultValue: {},
   }
+}, {
+  indexes: [
+    {
+      fields: ['userId']
+    }
+  ]
 });
 
 module.exports = Profile;
