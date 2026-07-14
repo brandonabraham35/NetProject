@@ -2,6 +2,8 @@ const { List } = require('../models');
 
 const logger = require('../config/logger');
 
+const { SearchHistory } = require('../models');
+
 const getList = async (req, res) => {
   try {
     const { type } = req.params;
@@ -54,17 +56,22 @@ const addToList = async (req, res) => {
       where: { userId, type, movieId }
     });
 
-    if (!existing) {
-      await List.create({
-        userId,
-        type,
-        movieData,
-        movieId,
-      });
+    if (existing) {
+      return res.status(409).json({ error: 'Movie is already in the list' });
     }
+
+    await List.create({
+      userId,
+      type,
+      movieData,
+      movieId,
+    });
 
     res.status(200).json({ message: 'Added to list successfully' });
   } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({ error: 'Movie is already in the list' });
+    }
     logger.error(`Error adding to list: ${error.message}`);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -99,8 +106,44 @@ const removeFromList = async (req, res) => {
   }
 };
 
+const getSearchHistory = async (req, res) => {
+  try {
+    const firebaseUid = req.user.firebaseUid;
+    const { User } = require('../models');
+    const user = await User.findOne({ where: { firebaseUid } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const history = await SearchHistory.findAll({
+      where: { userId: user.id },
+      order: [['createdAt', 'DESC']],
+      attributes: ['id', 'query', 'createdAt']
+    });
+    res.status(200).json({ history });
+  } catch (error) {
+    logger.error(`Error fetching search history: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const clearSearchHistory = async (req, res) => {
+  try {
+    const firebaseUid = req.user.firebaseUid;
+    const { User } = require('../models');
+    const user = await User.findOne({ where: { firebaseUid } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    await SearchHistory.destroy({ where: { userId: user.id } });
+    res.status(200).json({ message: 'Search history cleared successfully' });
+  } catch (error) {
+    logger.error(`Error clearing search history: ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getList,
   addToList,
   removeFromList,
+  getSearchHistory,
+  clearSearchHistory
 };

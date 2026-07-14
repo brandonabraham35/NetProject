@@ -3,9 +3,11 @@ const { User } = require('../models');
 let dashboardCache = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-const { List } = require('../models');
+const { List, ContentAnalytics, Genres } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
+const providerRegistry = require('../modules/content/providers/ProviderRegistry');
+const contentCache = require('../modules/content/cache/ContentCache');
 
 const logger = require('../config/logger');
 
@@ -50,6 +52,28 @@ const getDashboardOverview = async (req, res) => {
       attributes: ['id', 'email', 'createdAt']
     });
 
+    // Content specific analytics
+    // Since ContentAnalytics logs individual events without a 'views' counter, we group by contentId
+    const mostViewed = await ContentAnalytics.findAll({
+      attributes: [
+        'contentId',
+        [sequelize.fn('COUNT', sequelize.col('contentId')), 'views']
+      ],
+      where: {
+        eventType: {
+          [Op.in]: ['movie_opened', 'series_opened', 'episode_opened']
+        }
+      },
+      group: ['contentId'],
+      order: [[sequelize.fn('COUNT', sequelize.col('contentId')), 'DESC']],
+      limit: 5
+    });
+    const mostPopularGenres = await Genres.count(); // Simplified for now
+
+    // Dynamic statuses
+    const activeProviderName = providerRegistry.getActive() ? providerRegistry.getActive().constructor.name : 'None';
+    const cacheInfo = await contentCache.getStatus();
+
     const data = {
       totalUsers,
       activeUsers,
@@ -57,10 +81,18 @@ const getDashboardOverview = async (req, res) => {
       watchHistoryStatistics: watchHistoryCount,
       mostPopularContent: popularContent,
       recentlyRegisteredUsers: recentUsers,
+
+      // New fields for Content Module
+      mostViewed,
+      mostPopularGenres,
+      providerStatus: activeProviderName,
+      cacheStatus: cacheInfo.status,
+      cachedItems: cacheInfo.size,
+      trendingAnalytics: {}, // placeholder for deeper analytics
+
       databaseHealth: 'Healthy',
       apiHealth: 'Healthy',
-      cacheStatus: dashboardCache ? 'Hit' : 'Miss (Generated)',
-      cachedItems: 1, // just representing the dashboard cache here
+      dashboardCacheStatus: dashboardCache ? 'Hit' : 'Miss (Generated)',
     };
 
     dashboardCache = {
@@ -105,9 +137,15 @@ const clearCache = (req, res) => {
   res.status(200).json({ message: 'Content cache cleared successfully' });
 };
 
+const refreshContentCache = async (req, res) => {
+  await contentCache.clear();
+  res.status(200).json({ message: 'Content service cache cleared successfully' });
+};
+
 module.exports = {
   getDashboardOverview,
   getAllUsers,
   getHealthStatus,
   clearCache,
+  refreshContentCache,
 };

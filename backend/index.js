@@ -9,6 +9,7 @@ const { sequelize } = require('./src/models');
 const authRoutes = require('./src/routes/auth');
 const userRoutes = require('./src/routes/user');
 const adminRoutes = require('./src/routes/admin');
+const contentRoutes = require('./src/modules/content/routes/contentRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
 
 // Environment Validation
@@ -42,6 +43,7 @@ app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/user', userRoutes); // (Handles /api/v1/user/list/:type)
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/content', contentRoutes);
 
 // Centralized error handling
 app.use(errorHandler);

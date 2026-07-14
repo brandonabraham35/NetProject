@@ -47,7 +47,7 @@ function Play() {
     }
 
     axios
-      .get(`/movie/${id}/videos?api_key=${API_KEY}&language=en-US`)
+      .get(`/movie/${id}/videos`)
       .then((responce) => {
         console.log(responce.data, "This is the data");
         if (responce.data.results.length !== 0) {
@@ -60,7 +60,7 @@ function Play() {
 
     if (urlId === "") {
       axios
-        .get(`/tv/${id}/videos?api_key=${API_KEY}&language=en-US`)
+          .get(`/series/${id}/videos`)
         .then((responce) => {
           if (responce.data.results.length !== 0) {
             console.log(responce.data.results[0], "This is using find ");
@@ -73,16 +73,14 @@ function Play() {
         });
     }
     axios
-      .get(`/movie/${id}?api_key=${API_KEY}&language=en-US`)
+      .get(`/movie/${id}`)
       .then((responce) => {
         console.log(responce.data, "Movie deatils");
         setMovieDetails(responce.data);
         console.log(responce.data.genres[0]);
 
         axios
-          .get(
-            `movie/${id}/recommendations?api_key=${API_KEY}&language=en-US&page=1`
-          )
+          .get(`movie/${id}/recommendations`)
           .then((res) => {
             console.log(
               res.data.results.slice(0, 8),
