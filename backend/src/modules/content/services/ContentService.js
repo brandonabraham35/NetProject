@@ -81,8 +81,8 @@ class ContentService {
     return this._fetchWithCache(`series:${id}:season:${season}:ep:${episode}`, () => providerManager.executeWithFallback('getEpisode', [id, season, episode]));
   }
 
-  async search(query, page = 1) {
-    return this._fetchWithCache(`search:${query}:${page}`, () => providerManager.executeWithFallback('search', [query, page]));
+  async search(query, page = 1, filters = {}) {
+    return this._fetchWithCache(`search:${query}:${page}:${JSON.stringify(filters)}`, () => providerManager.executeWithFallback('search', [query, page, filters]));
   }
 
   async getGenres() {

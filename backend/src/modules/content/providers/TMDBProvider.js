@@ -77,7 +77,21 @@ class TMDBProvider extends ContentProvider {
     return res.data;
   }
 
-  async search(query, page = 1) {
+  async search(query, page = 1, filters = {}) {
+    // Basic fuzzy/typo tolerance can be handled by TMDB implicitly on standard searches.
+    // If strict filters are passed (year, genres), we should use /discover instead of /search/multi.
+    if (filters.year || filters.genres || filters.rating) {
+      const params = {
+        with_genres: filters.genres,
+        primary_release_year: filters.year,
+        'vote_average.gte': filters.rating,
+        page
+      };
+      if (query) params.with_keywords = query; // A loose mapping, search is better for exact queries
+      const res = await this.client.get('/discover/movie', { params });
+      return this._wrapList(res.data);
+    }
+
     const res = await this.client.get('/search/multi', { params: { query, page } });
     return this._wrapList(res.data);
   }
