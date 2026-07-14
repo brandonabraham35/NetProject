@@ -11,6 +11,7 @@ const userRoutes = require('./src/routes/user');
 const adminRoutes = require('./src/routes/admin');
 const contentRoutes = require('./src/modules/content/routes/contentRoutes');
 const errorHandler = require('./src/middleware/errorHandler');
+const syncManager = require('./src/modules/sync/SyncManager');
 
 // Environment Validation
 if (!process.env.PORT && process.env.NODE_ENV !== 'test') {
@@ -50,6 +51,7 @@ app.use(errorHandler);
 
 // Sync Database and start server
 sequelize.sync().then(() => {
+  syncManager.init(); // Initialize Background Synchronization
   app.listen(PORT, () => {
     console.log(`Backend server running on port ${PORT}`);
   });

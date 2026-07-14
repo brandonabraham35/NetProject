@@ -16,7 +16,8 @@ const logAnalytics = (userId, contentId, eventType) => {
 
 exports.getTrending = async (req, res) => {
   try {
-    const data = await contentService.getTrending();
+    const page = parseInt(req.query.page, 10) || 1;
+    const data = await contentService.getTrending(page);
     res.status(200).json(data);
   } catch (error) {
     logger.error(`Content Error: ${error.message}`);
@@ -26,7 +27,8 @@ exports.getTrending = async (req, res) => {
 
 exports.getTrendingMovies = async (req, res) => {
   try {
-    const data = await contentService.getTrendingMovies();
+    const page = parseInt(req.query.page, 10) || 1;
+    const data = await contentService.getTrendingMovies(page);
     res.status(200).json(data);
   } catch (error) {
     logger.error(`Content Error: ${error.message}`);
@@ -36,7 +38,8 @@ exports.getTrendingMovies = async (req, res) => {
 
 exports.getTrendingSeries = async (req, res) => {
   try {
-    const data = await contentService.getTrendingSeries();
+    const page = parseInt(req.query.page, 10) || 1;
+    const data = await contentService.getTrendingSeries(page);
     res.status(200).json(data);
   } catch (error) {
     logger.error(`Content Error: ${error.message}`);
@@ -46,7 +49,8 @@ exports.getTrendingSeries = async (req, res) => {
 
 exports.getPopular = async (req, res) => {
   try {
-    const data = await contentService.getPopularMovies();
+    const page = parseInt(req.query.page, 10) || 1;
+    const data = await contentService.getPopularMovies(page);
     res.status(200).json(data);
   } catch (error) {
     logger.error(`Content Error: ${error.message}`);
@@ -56,7 +60,8 @@ exports.getPopular = async (req, res) => {
 
 exports.getPopularMovies = async (req, res) => {
   try {
-    const data = await contentService.getPopularMovies();
+    const page = parseInt(req.query.page, 10) || 1;
+    const data = await contentService.getPopularMovies(page);
     res.status(200).json(data);
   } catch (error) {
     logger.error(`Content Error: ${error.message}`);
@@ -66,7 +71,8 @@ exports.getPopularMovies = async (req, res) => {
 
 exports.getPopularSeries = async (req, res) => {
   try {
-    const data = await contentService.getPopularSeries();
+    const page = parseInt(req.query.page, 10) || 1;
+    const data = await contentService.getPopularSeries(page);
     res.status(200).json(data);
   } catch (error) {
     logger.error(`Content Error: ${error.message}`);
@@ -120,7 +126,8 @@ exports.getEpisode = async (req, res) => {
 exports.search = async (req, res) => {
   try {
     const query = req.query.query || '';
-    const data = await contentService.search(query);
+    const page = parseInt(req.query.page, 10) || 1;
+    const data = await contentService.search(query, page);
     logAnalytics(req.user?.id, null, 'search_clicks');
 
     if (query && req.user?.id) {
@@ -179,7 +186,8 @@ exports.getRecommendations = async (req, res) => {
 
 exports.getMovieRecommendations = async (req, res) => {
   try {
-    const data = await contentService.getRecommendations(req.params.id);
+    const page = parseInt(req.query.page, 10) || 1;
+    const data = await contentService.getRecommendations(req.params.id, page);
     res.status(200).json(data);
   } catch (error) {
     logger.error(`Content Error: ${error.message}`);
@@ -202,7 +210,8 @@ exports.getVideos = async (req, res) => {
 
 exports.getUpcoming = async (req, res) => {
   try {
-    const data = await contentService.getUpcoming();
+    const page = parseInt(req.query.page, 10) || 1;
+    const data = await contentService.getUpcoming(page);
     res.status(200).json(data);
   } catch (error) {
     logger.error(`Content Error: ${error.message}`);

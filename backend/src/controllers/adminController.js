@@ -6,7 +6,7 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const { List, ContentAnalytics, Genres } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
-const providerRegistry = require('../modules/content/providers/ProviderRegistry');
+const providerManager = require('../modules/content/providers/ProviderManager');
 const contentCache = require('../modules/content/cache/ContentCache');
 
 const logger = require('../config/logger');
@@ -71,7 +71,7 @@ const getDashboardOverview = async (req, res) => {
     const mostPopularGenres = await Genres.count(); // Simplified for now
 
     // Dynamic statuses
-    const activeProviderName = providerRegistry.getActive() ? providerRegistry.getActive().constructor.name : 'None';
+    const activeProviderName = providerManager.getActive() ? providerManager.getActive().constructor.name : 'None';
     const cacheInfo = await contentCache.getStatus();
 
     const data = {
@@ -132,6 +132,10 @@ const getHealthStatus = (req, res) => {
   });
 };
 
+const getProviderHealth = (req, res) => {
+  res.status(200).json(providerManager.getHealthStats());
+};
+
 const clearCache = (req, res) => {
   dashboardCache = null;
   res.status(200).json({ message: 'Content cache cleared successfully' });
@@ -146,6 +150,7 @@ module.exports = {
   getDashboardOverview,
   getAllUsers,
   getHealthStatus,
+  getProviderHealth,
   clearCache,
   refreshContentCache,
 };

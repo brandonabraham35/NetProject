@@ -1,8 +1,25 @@
-const providerRegistry = require('../providers/ProviderRegistry');
+const providerManager = require('../providers/ProviderManager');
 const contentCache = require('../cache/ContentCache');
 const logger = require('../../../config/logger');
+const Normalizer = require('../utils/Normalizer');
 
 class ContentService {
+
+  _adaptResponseToUI(data) {
+    // If it's a paginated list
+    if (data && data.results) {
+      return {
+        ...data,
+        results: Normalizer.adaptListToUI(data.results)
+      };
+    }
+    // If it's a single item (has id but no results)
+    if (data && data.id && !data.results) {
+      return Normalizer.adaptToUI(data);
+    }
+    return data;
+  }
+
   async _fetchWithCache(cacheKey, fetchFunction) {
     const cached = await contentCache.get(cacheKey);
 
@@ -12,7 +29,10 @@ class ContentService {
     }
 
     try {
-      const data = await fetchFunction();
+      let data = await fetchFunction();
+      // Apply UI adapter here to ensure the frontend never breaks
+      data = this._adaptResponseToUI(data);
+
       await contentCache.set(cacheKey, data);
       return data;
     } catch (err) {
@@ -25,65 +45,65 @@ class ContentService {
     }
   }
 
-  async getTrending() {
-    return this._fetchWithCache('trending:all', () => providerRegistry.getActive().getTrending());
+  async getTrending(page = 1) {
+    return this._fetchWithCache(`trending:all:${page}`, () => providerManager.executeWithFallback('getTrending', [page]));
   }
 
-  async getTrendingMovies() {
-    return this._fetchWithCache('trending:movies', () => providerRegistry.getActive().getTrendingMovies());
+  async getTrendingMovies(page = 1) {
+    return this._fetchWithCache(`trending:movies:${page}`, () => providerManager.executeWithFallback('getTrendingMovies', [page]));
   }
 
-  async getTrendingSeries() {
-    return this._fetchWithCache('trending:series', () => providerRegistry.getActive().getTrendingSeries());
+  async getTrendingSeries(page = 1) {
+    return this._fetchWithCache(`trending:series:${page}`, () => providerManager.executeWithFallback('getTrendingSeries', [page]));
   }
 
-  async getPopularMovies() {
-    return this._fetchWithCache('popular:movies', () => providerRegistry.getActive().getPopularMovies());
+  async getPopularMovies(page = 1) {
+    return this._fetchWithCache(`popular:movies:${page}`, () => providerManager.executeWithFallback('getPopularMovies', [page]));
   }
 
-  async getPopularSeries() {
-    return this._fetchWithCache('popular:series', () => providerRegistry.getActive().getPopularSeries());
+  async getPopularSeries(page = 1) {
+    return this._fetchWithCache(`popular:series:${page}`, () => providerManager.executeWithFallback('getPopularSeries', [page]));
   }
 
   async getMovie(id) {
-    return this._fetchWithCache(`movie:${id}`, () => providerRegistry.getActive().getMovie(id));
+    return this._fetchWithCache(`movie:${id}`, () => providerManager.executeWithFallback('getMovie', [id]));
   }
 
   async getSeries(id) {
-    return this._fetchWithCache(`series:${id}`, () => providerRegistry.getActive().getSeries(id));
+    return this._fetchWithCache(`series:${id}`, () => providerManager.executeWithFallback('getSeries', [id]));
   }
 
   async getSeason(id, season) {
-    return this._fetchWithCache(`series:${id}:season:${season}`, () => providerRegistry.getActive().getSeason(id, season));
+    return this._fetchWithCache(`series:${id}:season:${season}`, () => providerManager.executeWithFallback('getSeason', [id, season]));
   }
 
   async getEpisode(id, season, episode) {
-    return this._fetchWithCache(`series:${id}:season:${season}:ep:${episode}`, () => providerRegistry.getActive().getEpisode(id, season, episode));
+    return this._fetchWithCache(`series:${id}:season:${season}:ep:${episode}`, () => providerManager.executeWithFallback('getEpisode', [id, season, episode]));
   }
 
-  async search(query) {
-    return this._fetchWithCache(`search:${query}`, () => providerRegistry.getActive().search(query));
+  async search(query, page = 1) {
+    return this._fetchWithCache(`search:${query}:${page}`, () => providerManager.executeWithFallback('search', [query, page]));
   }
 
   async getGenres() {
-    return this._fetchWithCache('genres', () => providerRegistry.getActive().getGenres());
+    return this._fetchWithCache('genres', () => providerManager.executeWithFallback('getGenres', []));
   }
 
-  async getRecommendations(id) {
-    return this._fetchWithCache(`recommendations:${id}`, () => providerRegistry.getActive().getRecommendations(id));
+  async getRecommendations(id, page = 1) {
+    return this._fetchWithCache(`recommendations:${id}:${page}`, () => providerManager.executeWithFallback('getRecommendations', [id, page]));
   }
 
   async getVideos(type, id) {
-    return this._fetchWithCache(`videos:${type}:${id}`, () => providerRegistry.getActive().getVideos(type, id));
+    return this._fetchWithCache(`videos:${type}:${id}`, () => providerManager.executeWithFallback('getVideos', [type, id]));
   }
 
-  async getUpcoming() {
-    return this._fetchWithCache(`upcoming`, () => providerRegistry.getActive().getUpcoming());
+  async getUpcoming(page = 1) {
+    return this._fetchWithCache(`upcoming:${page}`, () => providerManager.executeWithFallback('getUpcoming', [page]));
   }
 
   async discover(type, queryParams) {
     const cacheKey = `discover:${type}:${JSON.stringify(queryParams)}`;
-    return this._fetchWithCache(cacheKey, () => providerRegistry.getActive().discover(type, queryParams));
+    return this._fetchWithCache(cacheKey, () => providerManager.executeWithFallback('discover', [type, queryParams]));
   }
 
 }
