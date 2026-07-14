@@ -1,5 +1,6 @@
 const axios = require('axios');
 const ContentProvider = require('./ContentProvider');
+const Normalizer = require('../utils/Normalizer');
 
 class TMDBProvider extends ContentProvider {
   constructor() {
@@ -19,44 +20,56 @@ class TMDBProvider extends ContentProvider {
     });
   }
 
-  async getTrending() {
-    const res = await this.client.get('/trending/all/week');
-    return res.data;
+  _wrapList(data) {
+    if (!data) return data;
+    return {
+      ...data,
+      results: Normalizer.normalizeList(data.results, 'tmdb')
+    };
   }
 
-  async getTrendingMovies() {
-    const res = await this.client.get('/trending/movie/week');
-    return res.data;
+  _wrapItem(data) {
+    return Normalizer.normalizeItem(data, 'tmdb');
   }
 
-  async getTrendingSeries() {
-    const res = await this.client.get('/trending/tv/week');
-    return res.data;
+  async getTrending(page = 1) {
+    const res = await this.client.get('/trending/all/week', { params: { page } });
+    return this._wrapList(res.data);
   }
 
-  async getPopularMovies() {
-    const res = await this.client.get('/movie/popular');
-    return res.data;
+  async getTrendingMovies(page = 1) {
+    const res = await this.client.get('/trending/movie/week', { params: { page } });
+    return this._wrapList(res.data);
   }
 
-  async getPopularSeries() {
-    const res = await this.client.get('/tv/popular');
-    return res.data;
+  async getTrendingSeries(page = 1) {
+    const res = await this.client.get('/trending/tv/week', { params: { page } });
+    return this._wrapList(res.data);
+  }
+
+  async getPopularMovies(page = 1) {
+    const res = await this.client.get('/movie/popular', { params: { page } });
+    return this._wrapList(res.data);
+  }
+
+  async getPopularSeries(page = 1) {
+    const res = await this.client.get('/tv/popular', { params: { page } });
+    return this._wrapList(res.data);
   }
 
   async getMovie(id) {
     const res = await this.client.get(`/movie/${id}`);
-    return res.data;
+    return this._wrapItem(res.data);
   }
 
   async getSeries(id) {
     const res = await this.client.get(`/tv/${id}`);
-    return res.data;
+    return this._wrapItem(res.data);
   }
 
   async getSeason(id, season) {
     const res = await this.client.get(`/tv/${id}/season/${season}`);
-    return res.data;
+    return res.data; // Season payload differs significantly, leaving raw for now
   }
 
   async getEpisode(id, season, episode) {
@@ -64,35 +77,34 @@ class TMDBProvider extends ContentProvider {
     return res.data;
   }
 
-  async search(query) {
-    const res = await this.client.get('/search/multi', { params: { query } });
-    return res.data;
+  async search(query, page = 1) {
+    const res = await this.client.get('/search/multi', { params: { query, page } });
+    return this._wrapList(res.data);
   }
 
   async getGenres() {
     const res = await this.client.get('/genre/movie/list');
-    return res.data;
+    return res.data; // Usually just { genres: [{ id, name }] }
   }
 
-  async getRecommendations(id) {
-    const res = await this.client.get(`/movie/${id}/recommendations`);
-    return res.data;
+  async getRecommendations(id, page = 1) {
+    const res = await this.client.get(`/movie/${id}/recommendations`, { params: { page } });
+    return this._wrapList(res.data);
   }
 
   async getVideos(type, id) {
-    // type is 'movie' or 'tv'
     const res = await this.client.get(`/${type}/${id}/videos`);
-    return res.data;
+    return res.data; // Videos response usually has standard format { results: [] }
   }
 
-  async getUpcoming() {
-    const res = await this.client.get(`/movie/upcoming`);
-    return res.data;
+  async getUpcoming(page = 1) {
+    const res = await this.client.get(`/movie/upcoming`, { params: { page } });
+    return this._wrapList(res.data);
   }
 
   async discover(type, queryParams) {
     const res = await this.client.get(`/discover/${type}`, { params: queryParams });
-    return res.data;
+    return this._wrapList(res.data);
   }
 
 }

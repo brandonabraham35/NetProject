@@ -1,6 +1,7 @@
 const contentService = require('./ContentService');
 
 const { List, SearchHistory, ContinueWatching } = require('../../../models');
+const Normalizer = require('../utils/Normalizer');
 
 class RecommendationService {
   // A modular recommendation engine returning merged customized data based on user behavior
@@ -45,13 +46,14 @@ class RecommendationService {
       continueWatching = watchProgress.map(cw => ({ id: cw.movieId, progress: cw.progress }));
     }
 
+    // Ensure all internal lists are passed through adaptToUI to prevent frontend crashes
     return {
-      recommendedMovies,
-      recommendedSeries,
-      trendingForUser: trending.results?.slice(0, 5) || [],
-      continueWatching,
-      becauseYouWatched,
-      recentlyViewed
+      recommendedMovies: Normalizer.adaptListToUI(recommendedMovies),
+      recommendedSeries: Normalizer.adaptListToUI(recommendedSeries),
+      trendingForUser: Normalizer.adaptListToUI(trending.results?.slice(0, 5) || []),
+      continueWatching, // structure is different, handle appropriately if used
+      becauseYouWatched: Normalizer.adaptListToUI(becauseYouWatched),
+      recentlyViewed: Normalizer.adaptListToUI(recentlyViewed)
     };
   }
 }
