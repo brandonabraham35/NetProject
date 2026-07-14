@@ -77,6 +77,8 @@ const getDashboardOverview = async (req, res) => {
     // Further expanded Admin Stats for Phase 4
     const { SearchHistory } = require('../models');
 
+    const { StrategyPerformance, RecommendationScores, StrategyWeights } = require('../models');
+
     // Quick grouping for most searched queries
     const mostSearched = await SearchHistory.findAll({
       attributes: [
@@ -87,6 +89,9 @@ const getDashboardOverview = async (req, res) => {
       order: [[sequelize.fn('COUNT', sequelize.col('query')), 'DESC']],
       limit: 5
     });
+
+    const strategyPerformance = await StrategyPerformance.findAll();
+    const strategyWeights = await StrategyWeights.findAll();
 
     const data = {
       totalUsers,
@@ -106,6 +111,14 @@ const getDashboardOverview = async (req, res) => {
       cachedItems: cacheInfo.size,
       queueStatus: 'Idle/Scheduled', // Node-cron is active
       systemLogs: 'winston active',
+
+      recommendationAnalytics: {
+        totalGenerated: await RecommendationScores.count(),
+        ctr: 0.0, // Needs frontend feedback endpoint wiring for detailed CTR
+        acceptanceRate: 0.0,
+      },
+      strategyPerformance,
+      strategyWeights,
 
       databaseHealth: 'Healthy',
       apiHealth: 'Healthy',

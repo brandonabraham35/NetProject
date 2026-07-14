@@ -6,14 +6,12 @@ import RowPost from "../componets/RowPost/RowPost";
 import {
   originals,
   trending,
-  comedy,
-  horror,
-  Adventure,
-  SciFi,
   Animated,
-  War,
   trendingSeries,
   UpcomingMovies,
+  becauseYouWatched,
+  topPicks,
+  trendingForUser
 } from "../Constants/URLs";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../Firebase/FirebaseConfig";
@@ -37,14 +35,19 @@ function Home() {
       <Banner url={trending}></Banner>
       <div className="w-[99%] ml-1">
         <RowPost first title="Trending" url={trending} key={trending}></RowPost>
-        <RowPost title="Animated" url={Animated} key={Animated}></RowPost>
+        <RowPost title="Top Picks For You" url={topPicks} key={topPicks}></RowPost>
+        <RowPost title="Trending In Your Country" url={trendingForUser} key={trendingForUser}></RowPost>
+        <RowPost title="Because You Watched" url={becauseYouWatched} key={becauseYouWatched}></RowPost>
+
         {watchedMovies.length != 0 ? (
           <RowPost
-            title="Watched Movies"
+            title="Watch History"
             movieData={watchedMovies}
             key={"Watched Movies"}
           ></RowPost>
         ) : null}
+
+        <RowPost title="Animated" url={Animated} key={Animated}></RowPost>
         <RowPost
           title="Netflix Originals"
           islarge
@@ -56,12 +59,7 @@ function Home() {
           url={trendingSeries}
           key={trendingSeries}
         ></RowPost>
-        <RowPost title="Science Fiction" url={SciFi}></RowPost>
         <RowPost title="Upcoming Movies" url={UpcomingMovies}></RowPost>
-        <RowPost title="Comedy" url={comedy}></RowPost>
-        <RowPost title="Adventure" url={Adventure}></RowPost>
-        <RowPost title="Horror" url={horror}></RowPost>
-        <RowPost title="War" url={War}></RowPost>
       </div>
       <Footer></Footer>
     </div>

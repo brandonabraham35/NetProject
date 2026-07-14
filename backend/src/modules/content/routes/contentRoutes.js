@@ -30,7 +30,8 @@ router.get('/season/:id', (req, res) => {
 });
 router.get('/series/:id/season/:seasonId', optionalAuth, contentController.getSeason);
 router.get('/series/:id/season/:seasonId/episode/:episodeId', optionalAuth, contentController.getEpisode);
-router.get('/recommendations', authMiddleware, contentController.getRecommendations);
+// Note: Platform-wide recommendations moved to modules/recommendations.
+// Movie-specific recommendations kept here as they query the content provider directly
 router.get('/movie/:id/recommendations', optionalAuth, contentController.getMovieRecommendations);
 router.get('/genres', contentController.getGenres);
 router.get('/upcoming', contentController.getUpcoming);
